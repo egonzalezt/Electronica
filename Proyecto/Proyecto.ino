@@ -1,3 +1,10 @@
+/**
+* Project members
+* Esteban Gonzalez Tamayo
+* Luis Angel Jaimes Mora
+* David Garcia Contreras
+*/
+
 //libraries
 #include <SPI.h>
 #include <MFRC522.h>
@@ -83,7 +90,7 @@ void check(String value)
       digitalWrite(relayInput, HIGH); //turn ralay on to activate the solenoid
       delay(5000);
       digitalWrite(relayInput, LOW); // turn relay off
-      Serial.println("Door blocked");
+      Serial.println("Door locked");
       Serial.println();
       statuss = 1;
       break;
