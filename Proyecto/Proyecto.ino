@@ -21,14 +21,13 @@
 #include <BlynkSimpleEsp8266.h>
 
 char auth[] = "pzWcYBtaQLGaWdnwtSRcg4sJFsqjzwDv";
-
-char ssid[] = "IoT-B19";
-char pass[] = "meca2017*";
+char ssid[] = "WISPEREXT";
+char pass[] = "wispergt2020";
 
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
-int statuss = 0;
+int statuss = 2;
 int out = 0;
 String tam [4] ={"","","",""}; //card register
 
@@ -46,18 +45,28 @@ void setup()
 void loop() 
 {
   Blynk.run();
-
   // Look for new cards
-  if ( ! mfrc522.PICC_IsNewCardPresent()) 
+  if (mfrc522.PICC_IsNewCardPresent()) 
   {
-    return;
+    Serial.print("Hola");
   }
   // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) 
   {
     return;
   }
-  //Show UID on serial monitor
+  if(statuss==1)
+  {
+    Serial.println(".");
+  }
+  else
+  {
+    check(cardRd());
+  }
+}
+
+String cardRd()
+{
   String content= "";
   byte letter;
   for (byte i = 0; i < mfrc522.uid.size; i++) 
@@ -67,28 +76,9 @@ void loop()
   }
   content.toUpperCase();
   Serial.println();
-  Serial.print("card-> ");
-  Serial.print(content);
+  Serial.print("card-> "+content);
   Serial.println();
-  check(content);
-}
-
-BLYNK_WRITE(V3) 
-{
-  int a = param.asInt();
-  Serial.println("Test"+a);
-  if (a == 1) {
-      Serial.println("Access Granted ");
-      Serial.println("Welcome ");
-      Serial.println("Door unlocked");
-      digitalWrite(relayInput, HIGH); //turn ralay on to activate the solenoid
-       } 
-  if(a==0)
-  {
-      digitalWrite(relayInput, LOW); // turn relay off
-      Serial.println("Door locked");
-      Serial.println();
-  } 
+  return content;
 }
 
 void check(String value)
@@ -97,120 +87,143 @@ void check(String value)
   {}
   else
   {
-  for(int j = 0; j < 4; j++)
-  {
-    Serial.print(value.equals(tam[j]));
-    if (value.equals(tam[j])==1&&j<=4) //condition to check if the card can open the door
+    for(int j = 0; j < 4; j++)
     {
-      Serial.println("Access Granted ");
-      Serial.println("Welcome ");
-      Serial.println("Door unlocked");
-      digitalWrite(relayInput, HIGH); //turn ralay on to activate the solenoid
-      delay(5000);
-      digitalWrite(relayInput, LOW); // turn relay off
-      Serial.println("Door locked");
-      Serial.println();
-      statuss = 1;
-      break;
-    }else
-    {
-      Serial.println("Access Denied");  
-    }
-  }  
-    
+      Serial.print(value.equals(tam[j]));
+      if (value.equals(tam[j])==1&&j<=4) //condition to check if the card can open the door
+      {
+        Serial.println("Access Granted ");
+        Serial.println("Welcome ");
+        Serial.println("Door unlocked");
+        digitalWrite(relayInput, HIGH); //turn ralay on to activate the solenoid
+        delay(5000);
+        digitalWrite(relayInput, LOW); // turn relay off
+        Serial.println("Door locked");
+        Serial.println();
+        statuss = 1;
+        break;
+      }
+      else
+      {
+        Serial.println("Access Denied");  
+      }
+    }   
   }
 }
 
 void add1(String value)
 {
-  for(int i = 0; i < 4; i++)
+  if(value=="")
   {
-    Serial.println(value.equals(tam[i]));
-    Serial.println("tam: "+tam[i]);
-    if(value.equals(tam[i])==0&&i<4)
+    Serial.println("Please put the card on the card reader");  
+  }
+  else
+  {
+    for(int i = 0; i < 4; i++)
     {
-      Serial.println("Adding card");
-      if(tam[i]=="")
+      if(value.equals(tam[i])==0&&i<4)
       {
-        tam[i]= value;
-        Serial.println("Success!! card added");
-        break;
-      }  
-    }
-    else if(i==3)
-    {
-      Serial.println("Sorry but you can only add 4 cards." );
-    }
-    else if(i<4)
-    {
-      Serial.println("Please remove the card, this card is already added.");
-      if(value.equals(tam[i])==1)
+        if(tam[i]=="")
+        {
+          Serial.println("Adding card");
+          tam[i]= value;
+          Serial.println("Success!! card added");
+          Serial.println("please remove the card from the reader");
+          break;
+        }  
+      }
+      else if(i==3)
       {
-        break;
+        Serial.println("Sorry but you can only add 4 cards." );
       }
     }
   }
+  delay(2000);
 }
 
 void Delete(String value)
 {
-  for(int i = 0; i < 4; i++)
+  if(value=="")
   {
-    Serial.println(value.equals(tam[i]));
-    Serial.println("tam: "+tam[i]);
-    if(value.equals(tam[i])==1&&i<4)
+    Serial.println("Please put the card on the card reader");  
+  }
+  else
+  {
+    for(int i = 0; i < 4; i++)
     {
-      Serial.println("Deleting card");
-      tam[i]= "";
-      Serial.println("Success!! card deleted");
-      break;
+      if(value.equals(tam[i])==1&&i<4)
+      {
+        Serial.println("Deleting card");
+        tam[i]= "";
+        Serial.println("Success!! card deleted");
+        Serial.println("please remove the card from the reader"); 
+        break;
+      }
+      else
+      {
+        Serial.println("Error");
+      }
+    }
+  }
+  delay(2000);
+}
+
+BLYNK_WRITE(V1) 
+{
+  statuss=1;
+  int a = param.asInt();
+  if (a == 1) 
+  {
+    Serial.println("Please put the card on the reader");
+    delay(2000);
+    if(!mfrc522.PICC_IsNewCardPresent())
+    {
+      Serial.println("Card not detected"); 
     }
     else
     {
-      Serial.println("Error");
+      Delete(cardRd());      
     }
   }
+  statuss=0; 
 }
 
-BLYNK_WRITE(V1) {
+BLYNK_WRITE(V2) 
+{
+  statuss=1;
   int a = param.asInt();
-  Serial.println(a);
   if (a == 1) 
   {
-    String content= "";
-    byte letter;
-    for (byte i = 0; i < mfrc522.uid.size; i++) 
+    Serial.println("Please put the card on the reader");
+    delay(2000);
+    if(!mfrc522.PICC_IsNewCardPresent())
     {
-      content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-      content.concat(String(mfrc522.uid.uidByte[i], HEX));
+      Serial.println("Card not detected"); 
     }
-    content.toUpperCase();
-    Serial.println();
-    Serial.print("card-> ");
-    Serial.print(content);
-    Serial.println();
-    Delete(content);
-  } 
+    else
+    {
+      add1(cardRd());
+    }
+  }
+  statuss=0; 
 }
 
-
-BLYNK_WRITE(V2) {
+BLYNK_WRITE(V3) 
+{
+  statuss=1;
   int a = param.asInt();
-  Serial.println(a);
   if (a == 1) 
   {
-    String content= "";
-    byte letter;
-    for (byte i = 0; i < mfrc522.uid.size; i++) 
-    {
-      content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-      content.concat(String(mfrc522.uid.uidByte[i], HEX));
-    }
-    content.toUpperCase();
-    Serial.println();
-    Serial.print("card-> ");
-    Serial.print(content);
-    Serial.println();
-    add1(content);
+    Serial.println("Access Granted ");
+    Serial.println("Welcome ");
+    Serial.println("Door unlocked");
+    digitalWrite(relayInput, HIGH); //turn ralay on to activate the solenoid
   } 
+  if(a==0)
+  {
+    digitalWrite(relayInput, LOW); // turn relay off
+    Serial.println("Door locked");
+    Serial.println();
+  }
+  statuss=0;
 }
