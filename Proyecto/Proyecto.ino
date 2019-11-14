@@ -152,6 +152,48 @@ void add1(String value)
   }
 }
 
+void Delete(String value)
+{
+  for(int i = 0; i < 4; i++)
+  {
+    Serial.println(value.equals(tam[i]));
+    Serial.println("tam: "+tam[i]);
+    if(value.equals(tam[i])==1&&i<4)
+    {
+      Serial.println("Deleting card");
+      tam[i]= "";
+      Serial.println("Success!! card deleted");
+      break;
+    }
+    else
+    {
+      Serial.println("Error");
+    }
+  }
+}
+
+BLYNK_WRITE(V1) {
+  int a = param.asInt();
+  Serial.println(a);
+  if (a == 1) 
+  {
+    String content= "";
+    byte letter;
+    for (byte i = 0; i < mfrc522.uid.size; i++) 
+    {
+      content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+      content.concat(String(mfrc522.uid.uidByte[i], HEX));
+    }
+    content.toUpperCase();
+    Serial.println();
+    Serial.print("card-> ");
+    Serial.print(content);
+    Serial.println();
+    Delete(content);
+  } 
+}
+
+
 BLYNK_WRITE(V2) {
   int a = param.asInt();
   Serial.println(a);
