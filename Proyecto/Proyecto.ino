@@ -137,9 +137,11 @@ void Add(String value)
           break;
         }  
       }
-      else if(i==3)
+      else if(value.equals(tam[i])==1&&i<4)
       {
-        Serial.println("Sorry but you can only add 4 cards." );
+        Blynk.virtualWrite(V4, "This card ");
+        Blynk.virtualWrite(V5, "is already added.");
+        break;
       }
     }
   }
